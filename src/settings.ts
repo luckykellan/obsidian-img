@@ -280,7 +280,7 @@ export class ImageUploaderSettingTab extends PluginSettingTab {
 	}
 
 	private renderHeaderSetting(setting: Setting, entry: HeaderEntry, index: number): void {
-		setting.controlEl.addClass('kelan-image-uploader-header-row');
+		setting.controlEl.addClass('kelan-uploader-header-row');
 		setting.addText((text) =>
 			text
 				.setPlaceholder(t('settings.headerName.placeholder'))

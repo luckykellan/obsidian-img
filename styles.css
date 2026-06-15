@@ -1,12 +1,12 @@
-.kelan-image-uploader-header-row {
+.kelan-uploader-header-row {
 	gap: 8px;
 }
 
-.kelan-image-uploader-header-row input:first-child {
+.kelan-uploader-header-row input:first-child {
 	min-width: 10em;
 }
 
-a[href^="kelan-image-uploader://"] {
+a[href^="kelan-uploader://"] {
 	display: inline-flex;
 	align-items: center;
 	max-width: 100%;
@@ -24,17 +24,17 @@ a[href^="kelan-image-uploader://"] {
 	pointer-events: none;
 }
 
-a[href^="kelan-image-uploader://"]::before {
+a[href^="kelan-uploader://"]::before {
 	content: "";
 	width: 0.55em;
 	height: 0.55em;
 	flex: 0 0 auto;
 	border-radius: 50%;
 	background: var(--interactive-accent);
-	animation: kelan-image-uploader-uploading-pulse 1.15s ease-in-out infinite;
+	animation: kelan-uploader-uploading-pulse 1.15s ease-in-out infinite;
 }
 
-@keyframes kelan-image-uploader-uploading-pulse {
+@keyframes kelan-uploader-uploading-pulse {
 	0%,
 	100% {
 		opacity: 0.35;

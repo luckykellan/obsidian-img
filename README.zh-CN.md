@@ -1,4 +1,4 @@
-# kelan-image-uploader 中文说明
+# Kelan Image Uploader 中文说明
 
 [English](README.md)
 
@@ -37,10 +37,10 @@
 从 Release 下载 `main.js`、`manifest.json` 和 `styles.css`，放到当前库的插件目录：
 
 ```text
-.obsidian/plugins/kelan-image-uploader/
+.obsidian/plugins/kelan-uploader/
 ```
 
-重启或刷新 Obsidian，然后在第三方插件中启用 **kelan-image-uploader**。
+重启或刷新 Obsidian，然后在第三方插件中启用 **Kelan Image Uploader**。
 
 ## 设置
 
@@ -57,7 +57,7 @@
 
 ## 手机端
 
-在 Obsidian 手机端编辑 Markdown 笔记时，运行 **kelan-image-uploader: 从设备选择图片上传** 命令。插件会打开系统图片选择器，选择后上传图片，并把返回的图片 URL 插入到当前光标位置。
+在 Obsidian 手机端编辑 Markdown 笔记时，运行 **Kelan Image Uploader: 从设备选择图片上传** 命令。插件会打开系统图片选择器，选择后上传图片，并把返回的图片 URL 插入到当前光标位置。
 
 ## CloudFlare ImgBed 示例
 

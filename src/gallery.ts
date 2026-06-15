@@ -9,9 +9,11 @@ export interface GalleryReplacement {
 	text: string;
 }
 
-const GALLERY_ATTRIBUTE = 'data-kelan-image-uploader="gallery"';
+const GALLERY_ATTRIBUTE = 'data-kelan-uploader="gallery"';
+const PREVIOUS_GALLERY_ATTRIBUTE = 'data-kelan-image-uploader="gallery"';
 const LEGACY_GALLERY_ATTRIBUTE = 'data-image-upload-pipeline="gallery"';
-const GENERATED_IMAGE_TAG = /<img\b(?=[^>]*\b(?:data-kelan-image-uploader|data-image-upload-pipeline)="gallery")[^>]*>/g;
+const GENERATED_IMAGE_TAG =
+	/<img\b(?=[^>]*\b(?:data-kelan-uploader|data-kelan-image-uploader|data-image-upload-pipeline)="gallery")[^>]*>/g;
 
 export function createGalleryReplacement(
 	content: string,
@@ -212,7 +214,11 @@ function isSingleGeneratedImageTag(value: string): boolean {
 }
 
 function hasGeneratedGalleryAttribute(value: string): boolean {
-	return value.includes(GALLERY_ATTRIBUTE) || value.includes(LEGACY_GALLERY_ATTRIBUTE);
+	return (
+		value.includes(GALLERY_ATTRIBUTE) ||
+		value.includes(PREVIOUS_GALLERY_ATTRIBUTE) ||
+		value.includes(LEGACY_GALLERY_ATTRIBUTE)
+	);
 }
 
 function renderGallery(images: GalleryImage[]): string {

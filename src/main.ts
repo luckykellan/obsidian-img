@@ -34,7 +34,8 @@ interface UploadTask {
 }
 
 const UPLOAD_CONCURRENCY = 3;
-const PLACEHOLDER_PROTOCOL = 'kelan-image-uploader';
+const CHANGE_SOURCE = 'kelan-uploader';
+const PLACEHOLDER_PROTOCOL = 'kelan-uploader';
 
 export default class ObsidianImageUploaderPlugin extends Plugin {
 	settings: ImageUploaderSettings = DEFAULT_SETTINGS;
@@ -177,7 +178,7 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 			const replacement = `![](${escapeMarkdownUrl(url)})`;
 			const from = editor.offsetToPos(range.from);
 			const to = editor.offsetToPos(range.to);
-			editor.replaceRange(replacement, from, to, 'kelan-image-uploader');
+			editor.replaceRange(replacement, from, to, CHANGE_SOURCE);
 			return true;
 		}
 
@@ -187,7 +188,7 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 		});
 		const from = editor.offsetToPos(replacement.from);
 		const to = editor.offsetToPos(replacement.to);
-		editor.replaceRange(replacement.text, from, to, 'kelan-image-uploader');
+		editor.replaceRange(replacement.text, from, to, CHANGE_SOURCE);
 		return true;
 	}
 
@@ -198,7 +199,7 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 
 		const from = editor.offsetToPos(range.from);
 		const to = editor.offsetToPos(range.to);
-		editor.replaceRange(replacement, from, to, 'kelan-image-uploader');
+		editor.replaceRange(replacement, from, to, CHANGE_SOURCE);
 		return true;
 	}
 }

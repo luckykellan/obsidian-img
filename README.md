@@ -1,4 +1,4 @@
-# kelan-image-uploader
+# Kelan Image Uploader
 
 [中文文档](README.zh-CN.md)
 
@@ -37,10 +37,10 @@ The blank line creates two gallery rows: three images in the first row and three
 Download `main.js`, `manifest.json`, and `styles.css` from a release, then place them in:
 
 ```text
-.obsidian/plugins/kelan-image-uploader/
+.obsidian/plugins/kelan-uploader/
 ```
 
-Reload Obsidian and enable **kelan-image-uploader** in Community plugins.
+Reload Obsidian and enable **Kelan Image Uploader** in Community plugins.
 
 ## Settings
 
@@ -57,7 +57,7 @@ Reload Obsidian and enable **kelan-image-uploader** in Community plugins.
 
 ## Mobile
 
-On Obsidian Mobile, run **kelan-image-uploader: Upload images from device** while editing a Markdown note. The command opens the system image picker, then uploads the selected images and inserts the returned URLs at the cursor.
+On Obsidian Mobile, run **Kelan Image Uploader: Upload images from device** while editing a Markdown note. The command opens the system image picker, then uploads the selected images and inserts the returned URLs at the cursor.
 
 ## CloudFlare ImgBed Example
 
