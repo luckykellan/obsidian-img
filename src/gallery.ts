@@ -12,8 +12,10 @@ export interface GalleryReplacement {
 const GALLERY_ATTRIBUTE = 'data-kelan-uploader="gallery"';
 const PREVIOUS_GALLERY_ATTRIBUTE = 'data-kelan-image-uploader="gallery"';
 const LEGACY_GALLERY_ATTRIBUTE = 'data-image-upload-pipeline="gallery"';
+const GALLERY_CONTAINER_TAG = 'span';
 const GENERATED_IMAGE_TAG =
 	/<img\b(?=[^>]*\b(?:data-kelan-uploader|data-kelan-image-uploader|data-image-upload-pipeline)="gallery")[^>]*>/g;
+const GENERATED_GALLERY_END_TAG = `</${GALLERY_CONTAINER_TAG}>`;
 
 export function createGalleryReplacement(
 	content: string,
@@ -30,7 +32,12 @@ export function createGalleryReplacement(
 	};
 }
 
-function findPreviousGallery(content: string, offset: number): { from: number; images: GalleryImage[] } | null {
+interface GalleryMatch {
+	from: number;
+	images: GalleryImage[];
+}
+
+function findPreviousGallery(content: string, offset: number): GalleryMatch | null {
 	let scanEnd = offset;
 	const images: GalleryImage[] = [];
 	let from = offset;
@@ -39,12 +46,15 @@ function findPreviousGallery(content: string, offset: number): { from: number; i
 		const adjacentEnd = findAdjacentContentEnd(content, scanEnd);
 		if (adjacentEnd === null) break;
 
-		const image = findGeneratedImageEndingAt(content, adjacentEnd) ?? findMarkdownImageEndingAt(content, adjacentEnd);
-		if (!image) break;
+		const match =
+			findGeneratedGalleryEndingAt(content, adjacentEnd) ??
+			findGeneratedImageEndingAt(content, adjacentEnd) ??
+			findMarkdownImageEndingAt(content, adjacentEnd);
+		if (!match) break;
 
-		images.unshift(image.image);
-		from = image.from;
-		scanEnd = image.from;
+		images.unshift(...match.images);
+		from = match.from;
+		scanEnd = match.from;
 	}
 
 	if (images.length === 0) return null;
@@ -80,10 +90,33 @@ function findAdjacentContentEnd(content: string, offset: number): number | null 
 	return index;
 }
 
-function findGeneratedImageEndingAt(
-	content: string,
-	end: number,
-): { from: number; image: GalleryImage } | null {
+function findGeneratedGalleryEndingAt(content: string, end: number): GalleryMatch | null {
+	if (end < GENERATED_GALLERY_END_TAG.length) return null;
+	if (content.slice(end - GENERATED_GALLERY_END_TAG.length, end).toLowerCase() !== GENERATED_GALLERY_END_TAG) {
+		return null;
+	}
+
+	const openTagStart = content.lastIndexOf(`<${GALLERY_CONTAINER_TAG}`, end - GENERATED_GALLERY_END_TAG.length);
+	if (openTagStart < 0) return null;
+
+	const html = content.slice(openTagStart, end);
+	const openTagEnd = html.indexOf('>');
+	if (openTagEnd < 0) return null;
+
+	const openTag = html.slice(0, openTagEnd + 1);
+	if (!hasGeneratedGalleryAttribute(openTag)) return null;
+
+	const body = html.slice(openTagEnd + 1, html.length - GENERATED_GALLERY_END_TAG.length);
+	const images = parseGeneratedImages(body);
+	if (images.length === 0) return null;
+
+	return {
+		from: openTagStart,
+		images,
+	};
+}
+
+function findGeneratedImageEndingAt(content: string, end: number): GalleryMatch | null {
 	const openTagStart = content.lastIndexOf('<img', end - 1);
 	if (openTagStart < 0) return null;
 
@@ -96,17 +129,16 @@ function findGeneratedImageEndingAt(
 
 	return {
 		from: openTagStart,
-		image: {
-			src,
-			alt: getAttribute(tag, 'alt') ?? '',
-		},
+		images: [
+			{
+				src,
+				alt: getAttribute(tag, 'alt') ?? '',
+			},
+		],
 	};
 }
 
-function findMarkdownImageEndingAt(
-	content: string,
-	end: number,
-): { from: number; image: GalleryImage } | null {
+function findMarkdownImageEndingAt(content: string, end: number): GalleryMatch | null {
 	if (end <= 0 || content[end - 1] !== ')') return null;
 
 	const openParen = findMatchingOpenParen(content, end - 1);
@@ -124,10 +156,12 @@ function findMarkdownImageEndingAt(
 
 	return {
 		from,
-		image: {
-			src,
-			alt: unescapeMarkdown(content.slice(openBracket + 1, openParen - 1)),
-		},
+		images: [
+			{
+				src,
+				alt: unescapeMarkdown(content.slice(openBracket + 1, openParen - 1)),
+			},
+		],
 	};
 }
 
@@ -221,9 +255,41 @@ function hasGeneratedGalleryAttribute(value: string): boolean {
 	);
 }
 
+function parseGeneratedImages(value: string): GalleryImage[] {
+	const images: GalleryImage[] = [];
+	let cursor = 0;
+
+	GENERATED_IMAGE_TAG.lastIndex = 0;
+	while (true) {
+		const match = GENERATED_IMAGE_TAG.exec(value);
+		if (!match) break;
+		if (value.slice(cursor, match.index).trim()) return [];
+
+		const tag = match[0];
+		const src = getAttribute(tag, 'src');
+		if (src === null) return [];
+
+		images.push({
+			src,
+			alt: getAttribute(tag, 'alt') ?? '',
+		});
+		cursor = match.index + tag.length;
+	}
+
+	if (value.slice(cursor).trim()) return [];
+	return images;
+}
+
 function renderGallery(images: GalleryImage[]): string {
 	const width = `calc(100% / ${images.length})`;
-	return images.map((image) => renderGalleryImage(image, width)).join('');
+	return [
+		`<${GALLERY_CONTAINER_TAG}`,
+		` ${GALLERY_ATTRIBUTE}`,
+		' style="display: flex; align-items: flex-start; gap: 0; width: 100%;"',
+		'>',
+		images.map((image) => renderGalleryImage(image, width)).join(''),
+		GENERATED_GALLERY_END_TAG,
+	].join('');
 }
 
 function renderGalleryImage(image: GalleryImage, width: string): string {
@@ -232,7 +298,7 @@ function renderGalleryImage(image: GalleryImage, width: string): string {
 		` ${GALLERY_ATTRIBUTE}`,
 		` src="${escapeHtmlAttribute(image.src)}"`,
 		` alt="${escapeHtmlAttribute(image.alt)}"`,
-		` style="width: ${width}; height: auto;"`,
+		` style="display: block; flex: 0 0 ${width}; width: ${width}; max-width: ${width}; min-width: 0; height: auto;"`,
 		'>',
 	].join('');
 }

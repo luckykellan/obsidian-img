@@ -10,6 +10,13 @@
 	min-width: 10em;
 }
 
+.markdown-rendered img[data-kelan-uploader="gallery"],
+.markdown-rendered img[data-kelan-image-uploader="gallery"],
+.markdown-rendered img[data-image-upload-pipeline="gallery"] {
+	display: inline-block;
+	vertical-align: top;
+}
+
 a[href^="kelan-uploader://"] {
 	display: inline-flex;
 	align-items: center;
