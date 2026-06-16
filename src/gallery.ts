@@ -9,6 +9,10 @@ export interface GalleryReplacement {
 	text: string;
 }
 
+export interface GalleryOptions {
+	imageHeight: number;
+}
+
 const GALLERY_ATTRIBUTE = 'data-kelan-uploader="gallery"';
 const PREVIOUS_GALLERY_ATTRIBUTE = 'data-kelan-image-uploader="gallery"';
 const LEGACY_GALLERY_ATTRIBUTE = 'data-image-upload-pipeline="gallery"';
@@ -23,6 +27,7 @@ export function createGalleryReplacement(
 	content: string,
 	currentRange: { from: number; to: number },
 	image: GalleryImage,
+	options: GalleryOptions,
 ): GalleryReplacement {
 	const previous = findPreviousGallery(content, currentRange.from);
 	const images = previous ? [...previous.images, image] : [image];
@@ -30,7 +35,7 @@ export function createGalleryReplacement(
 	return {
 		from: previous?.from ?? currentRange.from,
 		to: currentRange.to,
-		text: renderGallery(images),
+		text: renderGallery(images, options),
 	};
 }
 
@@ -297,24 +302,27 @@ function parseGeneratedImages(value: string): GalleryImage[] {
 	return images;
 }
 
-function renderGallery(images: GalleryImage[]): string {
+function renderGallery(images: GalleryImage[], options: GalleryOptions): string {
+	const imageHeight = Math.max(1, Math.floor(options.imageHeight));
+
 	return [
 		`<${GALLERY_CONTAINER_TAG}`,
 		` ${GALLERY_ATTRIBUTE}`,
-		` style="display: grid; grid-template-columns: repeat(${images.length}, minmax(0, 1fr)); align-items: start; gap: 0; width: 100%; max-width: 100%; overflow: hidden;"`,
+		' data-kelan-gallery-layout="wrap"',
+		` style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0; width: 100%; max-width: 100%; overflow: hidden; --kelan-gallery-image-height: ${imageHeight}px;"`,
 		'>',
-		images.map(renderGalleryImage).join(''),
+		images.map((image) => renderGalleryImage(image, imageHeight)).join(''),
 		GENERATED_GALLERY_END_TAG,
 	].join('');
 }
 
-function renderGalleryImage(image: GalleryImage): string {
+function renderGalleryImage(image: GalleryImage, imageHeight: number): string {
 	return [
 		'<img',
 		` ${GALLERY_ATTRIBUTE}`,
 		` src="${escapeHtmlAttribute(image.src)}"`,
 		` alt="${escapeHtmlAttribute(image.alt)}"`,
-		' style="display: block; width: 100%; max-width: 100%; min-width: 0; height: auto;"',
+		` style="display: block; flex: 0 0 auto; height: ${imageHeight}px; width: auto; max-width: 100%; object-fit: contain;"`,
 		'>',
 	].join('');
 }

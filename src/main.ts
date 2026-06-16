@@ -182,10 +182,17 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 			return true;
 		}
 
-		const replacement = createGalleryReplacement(content, range, {
-			src: url,
-			alt,
-		});
+		const replacement = createGalleryReplacement(
+			content,
+			range,
+			{
+				src: url,
+				alt,
+			},
+			{
+				imageHeight: this.settings.autoInlineGalleryHeight,
+			},
+		);
 		const from = editor.offsetToPos(replacement.from);
 		const to = editor.offsetToPos(replacement.to);
 		editor.replaceRange(replacement.text, from, to, CHANGE_SOURCE);

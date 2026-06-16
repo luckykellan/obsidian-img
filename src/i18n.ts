@@ -30,6 +30,8 @@ type TranslationKey =
 	| 'settings.insertion.heading'
 	| 'settings.autoInlineGallery.name'
 	| 'settings.autoInlineGallery.desc'
+	| 'settings.autoInlineGalleryHeight.name'
+	| 'settings.autoInlineGalleryHeight.desc'
 	| 'settings.headers.heading'
 	| 'settings.header.name'
 	| 'settings.headerName.placeholder'
@@ -74,7 +76,9 @@ const translations: Record<Locale, Record<TranslationKey, string>> = {
 		'settings.noLimit.placeholder': 'No limit',
 		'settings.insertion.heading': 'Insertion',
 		'settings.autoInlineGallery.name': 'Auto inline gallery',
-		'settings.autoInlineGallery.desc': 'Insert uploaded images as inline HTML and merge adjacent Markdown or gallery images with no blank line so they share the row width.',
+		'settings.autoInlineGallery.desc': 'Insert uploaded images as inline HTML and merge adjacent Markdown or gallery images with no blank line into a fixed-height wrapping row.',
+		'settings.autoInlineGalleryHeight.name': 'Gallery image height',
+		'settings.autoInlineGalleryHeight.desc': 'Images keep their aspect ratio at this height and wrap to the next row when the line is full.',
 		'settings.headers.heading': 'HTTP headers',
 		'settings.header.name': 'Header {{index}}',
 		'settings.headerName.placeholder': 'Header name',
@@ -118,7 +122,9 @@ const translations: Record<Locale, Record<TranslationKey, string>> = {
 		'settings.noLimit.placeholder': '不限制',
 		'settings.insertion.heading': '插入方式',
 		'settings.autoInlineGallery.name': '自动同排图片',
-		'settings.autoInlineGallery.desc': '将上传图片插入为内联 HTML，并在相邻 Markdown 或同排图片之间没有空行时自动合并同排、平分宽度。',
+		'settings.autoInlineGallery.desc': '将上传图片插入为内联 HTML，并在相邻 Markdown 或同排图片之间没有空行时自动合并为固定高度、可换行的图片流。',
+		'settings.autoInlineGalleryHeight.name': '同排图片高度',
+		'settings.autoInlineGalleryHeight.desc': '图片按这个高度等比例缩放；一行放不下时自动换行。',
 		'settings.headers.heading': 'HTTP 请求头',
 		'settings.header.name': '请求头 {{index}}',
 		'settings.headerName.placeholder': '请求头名称',

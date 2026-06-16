@@ -14,15 +14,19 @@
 .markdown-rendered img[data-kelan-image-uploader="gallery"],
 .markdown-rendered img[data-image-upload-pipeline="gallery"] {
 	display: inline-block;
+	width: auto !important;
+	max-width: 100% !important;
+	object-fit: contain !important;
 	vertical-align: top;
 }
 
-.markdown-rendered span:where(
+.markdown-rendered :is(div, span):where(
 		[data-kelan-uploader="gallery"],
 		[data-kelan-image-uploader="gallery"],
 		[data-image-upload-pipeline="gallery"]
 	) {
 	display: flex !important;
+	flex-wrap: wrap !important;
 	align-items: flex-start !important;
 	gap: 0 !important;
 	width: 100% !important;
@@ -30,7 +34,7 @@
 	overflow: hidden !important;
 }
 
-.markdown-rendered span:where(
+.markdown-rendered :is(div, span):where(
 		[data-kelan-uploader="gallery"],
 		[data-kelan-image-uploader="gallery"],
 		[data-image-upload-pipeline="gallery"]
@@ -40,11 +44,25 @@
 		[data-kelan-image-uploader="gallery"],
 		[data-image-upload-pipeline="gallery"]
 	) {
-	flex: 1 1 0 !important;
-	width: 0 !important;
-	max-width: none !important;
+	display: block !important;
+	flex: 0 0 auto !important;
+	width: auto !important;
+	max-width: 100% !important;
 	min-width: 0 !important;
-	height: auto !important;
+	object-fit: contain !important;
+}
+
+.markdown-rendered :is(div, span):where(
+		[data-kelan-uploader="gallery"],
+		[data-kelan-image-uploader="gallery"],
+		[data-image-upload-pipeline="gallery"]
+	):not([data-kelan-gallery-layout="wrap"])
+	> img:where(
+		[data-kelan-uploader="gallery"],
+		[data-kelan-image-uploader="gallery"],
+		[data-image-upload-pipeline="gallery"]
+	) {
+	height: var(--kelan-gallery-image-height, 160px) !important;
 }
 
 a[href^="kelan-uploader://"] {

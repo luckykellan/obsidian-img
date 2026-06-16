@@ -22,6 +22,7 @@ export interface ImageUploaderSettings {
 	imageUrlPath: string;
 	headers: HeaderEntry[];
 	autoInlineGallery: boolean;
+	autoInlineGalleryHeight: number;
 	transform: ImageTransformSettings;
 }
 
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: ImageUploaderSettings = {
 	imageUrlPath: 'url',
 	headers: [],
 	autoInlineGallery: false,
+	autoInlineGalleryHeight: 160,
 	transform: {
 		enabled: false,
 		outputFormat: 'original',
@@ -59,6 +61,10 @@ export function normalizeSettings(data: unknown): ImageUploaderSettings {
 		imageUrlPath: getString(saved.imageUrlPath, DEFAULT_SETTINGS.imageUrlPath),
 		headers: normalizeHeaders(saved.headers),
 		autoInlineGallery: getBoolean(saved.autoInlineGallery, DEFAULT_SETTINGS.autoInlineGallery),
+		autoInlineGalleryHeight: getPositiveInteger(
+			saved.autoInlineGalleryHeight,
+			DEFAULT_SETTINGS.autoInlineGalleryHeight,
+		),
 		transform: {
 			enabled: getBoolean(savedTransform.enabled, DEFAULT_SETTINGS.transform.enabled),
 			outputFormat: getOutputFormat(savedTransform.outputFormat),
@@ -144,6 +150,11 @@ export class ImageUploaderSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName(t('settings.autoInlineGallery.name'))
 				.setDesc(t('settings.autoInlineGallery.desc')),
+		);
+		this.renderAutoInlineGalleryHeightSetting(
+			new Setting(containerEl)
+				.setName(t('settings.autoInlineGalleryHeight.name'))
+				.setDesc(t('settings.autoInlineGalleryHeight.desc')),
 		);
 
 		new Setting(containerEl).setName(t('settings.headers.heading')).setHeading();
@@ -279,6 +290,20 @@ export class ImageUploaderSettingTab extends PluginSettingTab {
 		);
 	}
 
+	private renderAutoInlineGalleryHeightSetting(setting: Setting): void {
+		setting.addText((text) =>
+			text
+				.setPlaceholder(String(DEFAULT_SETTINGS.autoInlineGalleryHeight))
+				.setValue(String(this.plugin.settings.autoInlineGalleryHeight))
+				.onChange(async (value) => {
+					const parsed = parsePositiveIntegerInput(value);
+					if (parsed === null) return;
+					this.plugin.settings.autoInlineGalleryHeight = parsed ?? DEFAULT_SETTINGS.autoInlineGalleryHeight;
+					await this.plugin.saveSettings();
+				}),
+		);
+	}
+
 	private renderHeaderSetting(setting: Setting, entry: HeaderEntry, index: number): void {
 		setting.controlEl.addClass('kelan-uploader-header-row');
 		setting.addText((text) =>
@@ -356,6 +381,15 @@ function getOptionalPositiveInteger(value: unknown): number | undefined {
 	if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
 	const integer = Math.floor(value);
 	return integer > 0 ? integer : undefined;
+}
+
+function getPositiveInteger(value: unknown, fallback: number): number {
+	return getOptionalPositiveInteger(value) ?? fallback;
+}
+
+function parsePositiveIntegerInput(value: string): number | undefined | null {
+	const parsed = parseOptionalIntegerInput(value);
+	return parsed === undefined ? undefined : parsed;
 }
 
 function parseOptionalIntegerInput(value: string): number | undefined | null {

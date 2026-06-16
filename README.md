@@ -12,7 +12,7 @@ An Obsidian plugin for uploading selected, pasted, or dropped images to a config
 - Optional resize, compression, and JPEG/PNG/WebP conversion.
 - Preserve SVG, animated GIF, ICO, and other unsupported transform targets as original files.
 - Upload multiple images while preserving insertion order.
-- Auto inline gallery: when enabled, adjacent Markdown or gallery images with no blank line are merged into one row and share the row width.
+- Auto inline gallery: when enabled, adjacent Markdown or gallery images with no blank line are merged into a fixed-height wrapping gallery.
 
 Example gallery grouping:
 
@@ -26,7 +26,7 @@ Example gallery grouping:
 ![](six.webp)
 ```
 
-The blank line creates two gallery rows: three images in the first row and three images in the second row.
+The blank line creates two gallery groups. Images keep the configured gallery height, preserve their aspect ratio, and wrap when the current row is full.
 
 ## Requirements
 
@@ -51,7 +51,8 @@ Reload Obsidian and enable **Kelan Image Uploader** in Community plugins.
 | Image URL path | Dot path used to read the returned URL. |
 | HTTP headers | Optional headers such as `Authorization`. |
 | Image transform | Resize, compress, or convert before upload. |
-| Auto inline gallery | Merge adjacent Markdown or gallery images with no blank line into one row. |
+| Auto inline gallery | Merge adjacent Markdown or gallery images with no blank line into a fixed-height wrapping gallery. |
+| Gallery image height | Height used by auto inline gallery images. Width follows each image's aspect ratio. |
 
 `Content-Type` is generated automatically for multipart upload and cannot be overridden.
 
