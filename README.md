@@ -26,7 +26,7 @@ Example gallery grouping:
 ![](six.webp)
 ```
 
-The blank line creates two gallery groups. Images keep the configured gallery height, preserve their aspect ratio, and wrap when the current row is full.
+The blank line creates two gallery groups. Images keep the configured gallery height, preserve their aspect ratio, and wrap when the current row is full. Adding another image to an existing group re-renders the whole group with the current height setting.
 
 ## Requirements
 

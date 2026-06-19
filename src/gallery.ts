@@ -30,17 +30,19 @@ export function createGalleryReplacement(
 	options: GalleryOptions,
 ): GalleryReplacement {
 	const previous = findPreviousGallery(content, currentRange.from);
-	const images = previous ? [...previous.images, image] : [image];
+	const next = findNextGallery(content, currentRange.to);
+	const images = [...(previous?.images ?? []), image, ...(next?.images ?? [])];
 
 	return {
 		from: previous?.from ?? currentRange.from,
-		to: currentRange.to,
+		to: next?.to ?? currentRange.to,
 		text: renderGallery(images, options),
 	};
 }
 
 interface GalleryMatch {
 	from: number;
+	to: number;
 	images: GalleryImage[];
 }
 
@@ -48,6 +50,7 @@ function findPreviousGallery(content: string, offset: number): GalleryMatch | nu
 	let scanEnd = offset;
 	const images: GalleryImage[] = [];
 	let from = offset;
+	let to = offset;
 
 	while (true) {
 		const adjacentEnd = findAdjacentContentEnd(content, scanEnd);
@@ -65,7 +68,33 @@ function findPreviousGallery(content: string, offset: number): GalleryMatch | nu
 	}
 
 	if (images.length === 0) return null;
-	return { from, images };
+	return { from, to, images };
+}
+
+function findNextGallery(content: string, offset: number): GalleryMatch | null {
+	let scanStart = offset;
+	const images: GalleryImage[] = [];
+	let from = offset;
+	let to = offset;
+
+	while (true) {
+		const adjacentStart = findAdjacentContentStart(content, scanStart);
+		if (adjacentStart === null) break;
+
+		const match =
+			findGeneratedGalleryStartingAt(content, adjacentStart) ??
+			findGeneratedImageStartingAt(content, adjacentStart) ??
+			findMarkdownImageStartingAt(content, adjacentStart);
+		if (!match) break;
+
+		if (images.length === 0) from = match.from;
+		images.push(...match.images);
+		to = match.to;
+		scanStart = match.to;
+	}
+
+	if (images.length === 0) return null;
+	return { from, to, images };
 }
 
 function findAdjacentContentEnd(content: string, offset: number): number | null {
@@ -88,6 +117,35 @@ function findAdjacentContentEnd(content: string, offset: number): number | null 
 		if (char === '\r') {
 			newlineCount += 1;
 			index -= 1;
+			if (newlineCount >= 2) return null;
+			continue;
+		}
+		break;
+	}
+
+	return index;
+}
+
+function findAdjacentContentStart(content: string, offset: number): number | null {
+	let index = offset;
+	let newlineCount = 0;
+
+	while (index < content.length) {
+		const char = content[index];
+		if (char === ' ' || char === '\t') {
+			index += 1;
+			continue;
+		}
+		if (char === '\r') {
+			newlineCount += 1;
+			index += 1;
+			if (index < content.length && content[index] === '\n') index += 1;
+			if (newlineCount >= 2) return null;
+			continue;
+		}
+		if (char === '\n') {
+			newlineCount += 1;
+			index += 1;
 			if (newlineCount >= 2) return null;
 			continue;
 		}
@@ -134,6 +192,47 @@ function findGeneratedGalleryContainerEndingAt(
 
 	return {
 		from: openTagStart,
+		to: end,
+		images,
+	};
+}
+
+function findGeneratedGalleryStartingAt(content: string, start: number): GalleryMatch | null {
+	return (
+		findGeneratedGalleryContainerStartingAt(content, start, GALLERY_CONTAINER_TAG, GENERATED_GALLERY_END_TAG) ??
+		findGeneratedGalleryContainerStartingAt(
+			content,
+			start,
+			PREVIOUS_GALLERY_CONTAINER_TAG,
+			PREVIOUS_GENERATED_GALLERY_END_TAG,
+		)
+	);
+}
+
+function findGeneratedGalleryContainerStartingAt(
+	content: string,
+	start: number,
+	tagName: string,
+	endTag: string,
+): GalleryMatch | null {
+	if (!content.startsWith(`<${tagName}`, start)) return null;
+
+	const openTagEnd = content.indexOf('>', start);
+	if (openTagEnd < 0) return null;
+
+	const openTag = content.slice(start, openTagEnd + 1);
+	if (!hasGeneratedGalleryAttribute(openTag)) return null;
+
+	const endTagStart = content.indexOf(endTag, openTagEnd + 1);
+	if (endTagStart < 0) return null;
+
+	const body = content.slice(openTagEnd + 1, endTagStart);
+	const images = parseGeneratedImages(body);
+	if (images.length === 0) return null;
+
+	return {
+		from: start,
+		to: endTagStart + endTag.length,
 		images,
 	};
 }
@@ -151,6 +250,32 @@ function findGeneratedImageEndingAt(content: string, end: number): GalleryMatch 
 
 	return {
 		from: openTagStart,
+		to: end,
+		images: [
+			{
+				src,
+				alt: getAttribute(tag, 'alt') ?? '',
+			},
+		],
+	};
+}
+
+function findGeneratedImageStartingAt(content: string, start: number): GalleryMatch | null {
+	if (!content.startsWith('<img', start)) return null;
+
+	const tagEnd = content.indexOf('>', start);
+	if (tagEnd < 0) return null;
+
+	const tag = content.slice(start, tagEnd + 1);
+	if (!hasGeneratedGalleryAttribute(tag)) return null;
+	if (!isSingleGeneratedImageTag(tag)) return null;
+
+	const src = getAttribute(tag, 'src');
+	if (src === null) return null;
+
+	return {
+		from: start,
+		to: tagEnd + 1,
 		images: [
 			{
 				src,
@@ -178,10 +303,36 @@ function findMarkdownImageEndingAt(content: string, end: number): GalleryMatch |
 
 	return {
 		from,
+		to: end,
 		images: [
 			{
 				src,
 				alt: unescapeMarkdown(content.slice(openBracket + 1, openParen - 1)),
+			},
+		],
+	};
+}
+
+function findMarkdownImageStartingAt(content: string, start: number): GalleryMatch | null {
+	if (content[start] !== '!' || content[start + 1] !== '[') return null;
+
+	const closeBracket = findMatchingCloseBracket(content, start + 1);
+	if (closeBracket === null || content[closeBracket + 1] !== '(') return null;
+
+	const openParen = closeBracket + 1;
+	const closeParen = findMatchingCloseParen(content, openParen);
+	if (closeParen === null) return null;
+
+	const src = parseMarkdownDestination(content.slice(openParen + 1, closeParen));
+	if (src === null) return null;
+
+	return {
+		from: start,
+		to: closeParen + 1,
+		images: [
+			{
+				src,
+				alt: unescapeMarkdown(content.slice(start + 2, closeBracket)),
 			},
 		],
 	};
@@ -207,6 +358,26 @@ function findMatchingOpenParen(content: string, closeParen: number): number | nu
 	return null;
 }
 
+function findMatchingCloseParen(content: string, openParen: number): number | null {
+	let depth = 0;
+
+	for (let index = openParen; index < content.length; index += 1) {
+		const char = content[index];
+		if (char === '\n' || char === '\r') return null;
+		if (isEscaped(content, index)) continue;
+		if (char === '(') {
+			depth += 1;
+			continue;
+		}
+		if (char === ')') {
+			depth -= 1;
+			if (depth === 0) return index;
+		}
+	}
+
+	return null;
+}
+
 function findMatchingOpenBracket(content: string, closeBracket: number): number | null {
 	let depth = 0;
 
@@ -219,6 +390,26 @@ function findMatchingOpenBracket(content: string, closeBracket: number): number 
 			continue;
 		}
 		if (char === '[') {
+			depth -= 1;
+			if (depth === 0) return index;
+		}
+	}
+
+	return null;
+}
+
+function findMatchingCloseBracket(content: string, openBracket: number): number | null {
+	let depth = 0;
+
+	for (let index = openBracket; index < content.length; index += 1) {
+		const char = content[index];
+		if (char === '\n' || char === '\r') return null;
+		if (isEscaped(content, index)) continue;
+		if (char === '[') {
+			depth += 1;
+			continue;
+		}
+		if (char === ']') {
 			depth -= 1;
 			if (depth === 0) return index;
 		}
