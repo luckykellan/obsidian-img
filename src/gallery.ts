@@ -513,7 +513,7 @@ function renderGalleryImage(image: GalleryImage, imageHeight: number): string {
 		` ${GALLERY_ATTRIBUTE}`,
 		` src="${escapeHtmlAttribute(image.src)}"`,
 		` alt="${escapeHtmlAttribute(image.alt)}"`,
-		` style="display: block; flex: 0 0 auto; height: ${imageHeight}px; width: auto; max-width: 100%; object-fit: contain;"`,
+		` style="display: block; flex: 0 0 auto; height: ${imageHeight}px; width: auto; max-width: none; object-fit: contain;"`,
 		'>',
 	].join('');
 }

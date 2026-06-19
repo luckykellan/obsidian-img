@@ -15,7 +15,7 @@
 .markdown-rendered img[data-image-upload-pipeline="gallery"] {
 	display: inline-block;
 	width: auto !important;
-	max-width: 100% !important;
+	height: var(--kelan-gallery-image-height, 160px) !important;
 	object-fit: contain !important;
 	vertical-align: top;
 }
@@ -47,22 +47,10 @@
 	display: block !important;
 	flex: 0 0 auto !important;
 	width: auto !important;
-	max-width: 100% !important;
+	max-width: none !important;
 	min-width: 0 !important;
-	object-fit: contain !important;
-}
-
-.markdown-rendered :is(div, span):where(
-		[data-kelan-uploader="gallery"],
-		[data-kelan-image-uploader="gallery"],
-		[data-image-upload-pipeline="gallery"]
-	):not([data-kelan-gallery-layout="wrap"])
-	> img:where(
-		[data-kelan-uploader="gallery"],
-		[data-kelan-image-uploader="gallery"],
-		[data-image-upload-pipeline="gallery"]
-	) {
 	height: var(--kelan-gallery-image-height, 160px) !important;
+	object-fit: contain !important;
 }
 
 a[href^="kelan-uploader://"] {
