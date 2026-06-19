@@ -18,7 +18,7 @@ import { prepareImageForUpload } from './transform';
 import { uploadImage } from './uploader';
 import {
 	collectImageFiles,
-	collectImageFilesFromFileList,
+	collectImageFilesFromPicker,
 	escapeMarkdownLinkText,
 	escapeMarkdownUrl,
 } from './utils';
@@ -114,13 +114,23 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 		input.accept = 'image/*';
 		input.multiple = true;
 		input.addClass('kelan-uploader-hidden-file-input');
+		let handled = false;
 
-		const cleanup = () => {
+		function handleWindowFocus() {
+			activeWindow.setTimeout(handleSelection, 250);
+		}
+
+		function cleanup() {
+			activeWindow.removeEventListener('focus', handleWindowFocus);
 			input.remove();
-		};
+		}
 
-		input.addEventListener('change', () => {
-			const imageFiles = collectImageFilesFromFileList(input.files);
+		const handleSelection = () => {
+			if (handled) return;
+			if (!input.files || input.files.length === 0) return;
+
+			handled = true;
+			const imageFiles = collectImageFilesFromPicker(input.files);
 			const selectedFileCount = input.files?.length ?? 0;
 			cleanup();
 
@@ -129,12 +139,19 @@ export default class ObsidianImageUploaderPlugin extends Plugin {
 				return;
 			}
 
+			editor.focus();
 			this.handleEditorFiles(editor, imageFiles);
-		});
+		};
+
+		input.addEventListener('input', handleSelection);
+		input.addEventListener('change', handleSelection);
 		input.addEventListener('cancel', cleanup, { once: true });
+		activeWindow.addEventListener('focus', handleWindowFocus);
 
 		activeDocument.body.appendChild(input);
 		input.click();
+
+		activeWindow.setTimeout(handleSelection, 500);
 	}
 
 	private async processUploads(editor: Editor, tasks: UploadTask[]): Promise<void> {

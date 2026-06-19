@@ -1,5 +1,11 @@
 .kelan-uploader-hidden-file-input {
-	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
 }
 
 .kelan-uploader-header-row {

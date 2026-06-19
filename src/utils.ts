@@ -25,6 +25,14 @@ export function collectImageFilesFromFileList(fileList: FileList | null | undefi
 	return collectFilesFromFileList(fileList).filter(isImageFile);
 }
 
+export function collectImageFilesFromPicker(fileList: FileList | null | undefined): File[] {
+	if (!fileList) return [];
+
+	const files = collectFilesFromFileList(fileList);
+	const imageFiles = files.filter(isImageFile);
+	return imageFiles.length > 0 ? imageFiles : files;
+}
+
 export function isImageFile(file: File): boolean {
 	if (file.type.toLowerCase().startsWith('image/')) return true;
 	const extension = getExtension(file.name);
