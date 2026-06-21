@@ -24,10 +24,16 @@ const WEBP_MIME_TYPE = 'image/webp';
 
 type WebpEncoderInit = (
 	module: WebAssembly.Module,
+	moduleOptionOverrides?: WebpEncoderModuleOptions,
 ) => Promise<unknown>;
+
+interface WebpEncoderModuleOptions {
+	locateFile(path: string, prefix: string): string;
+}
 
 const initWebpEncoderWithModule = initWebpEncoder as unknown as WebpEncoderInit;
 let webpEncoderReady: Promise<void> | null = null;
+const EMBEDDED_WEBP_WASM_URL = 'data:application/octet-stream;base64,';
 
 export async function prepareImageForUpload(
 	file: File,
@@ -200,7 +206,9 @@ async function initializeWebpEncoder(): Promise<void> {
 		webpEncoderReady = (async () => {
 			const wasmBytes = await simd() ? webpEncoderSimdWasm : webpEncoderWasm;
 			const module = await WebAssembly.compile(toArrayBuffer(wasmBytes));
-			await initWebpEncoderWithModule(module);
+			await initWebpEncoderWithModule(module, {
+				locateFile: () => EMBEDDED_WEBP_WASM_URL,
+			});
 		})();
 	}
 	return webpEncoderReady;
